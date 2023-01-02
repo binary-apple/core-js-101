@@ -108,39 +108,98 @@ function fromJSON(proto, json) {
  *               builder.element('td').pseudoClass('nth-of-type(even)')
  *           )
  *      )
- *  ).stringify()
+ *  ). stringify()
  *    => 'div#main.container.draggable + table#data ~ tr:nth-of-type(even)   td:nth-of-type(even)'
  *
  *  For more examples see unit tests.
  */
 
+class MySuperBaseElementSelector {
+  constructor() {
+    this.selector = '';
+    this.elCnt = 0;
+    this.idCnt = 0;
+    this.pseudoElCnt = 0;
+  }
+
+  element(value) {
+    if (this.elCnt > 0) throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    if (this.selector.length > 0) throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    this.elCnt += 1;
+    this.selector += value;
+    return this;
+  }
+
+  id(value) {
+    if (this.idCnt > 0) throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    if (this.selector.indexOf('.') >= 0 || this.selector.indexOf('[') >= 0 || this.selector.indexOf(':') >= 0) throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    this.idCnt += 1;
+    this.selector += `#${value}`;
+    return this;
+  }
+
+  class(value) {
+    this.selector += `.${value}`;
+    if (this.selector.indexOf('[') >= 0 || this.selector.indexOf(':') >= 0) throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    return this;
+  }
+
+  attr(value) {
+    if (this.selector.indexOf(':') >= 0) throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    this.selector += `[${value}]`;
+    return this;
+  }
+
+  pseudoClass(value) {
+    if (this.pseudoElCnt > 0) throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    this.selector += `:${value}`;
+    return this;
+  }
+
+  pseudoElement(value) {
+    if (this.pseudoElCnt > 0) throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    this.pseudoElCnt += 1;
+    this.selector += `::${value}`;
+    return this;
+  }
+
+  combine(selector1, combinator, selector2) {
+    this.selector = `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+    return this;
+  }
+
+  stringify() {
+    return this.selector;
+  }
+}
+
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    return (new MySuperBaseElementSelector()).element(value);
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    return (new MySuperBaseElementSelector()).id(value);
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    return (new MySuperBaseElementSelector()).class(value);
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    return (new MySuperBaseElementSelector()).attr(value);
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    return (new MySuperBaseElementSelector()).pseudoClass(value);
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    return (new MySuperBaseElementSelector()).pseudoElement(value);
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    return (new MySuperBaseElementSelector()).combine(selector1, combinator, selector2);
   },
 };
 
